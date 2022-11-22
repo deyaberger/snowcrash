@@ -4,7 +4,7 @@
 
 In this level we have to:
 1. Copy the file `/etc/passwd` from the VM to our computer (because we see that for user level01, the password is not written as ```x``` (encrypted) like the others)
-2. Use john the reaper to decrypt this 'non-crypted' password
+2. Use john the ripper to decrypt this 'non-crypted' password
 
 ## 👾 Commands
 

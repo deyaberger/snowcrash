@@ -4,8 +4,8 @@
 
 In this level we can observe, with a simple ```ls -la``` in the home, that we have:
 1. A binary with sticky rights, that prints us 'Exploit me' when running it.
-2. When Launching ```strings level03``` we find a command that give us the solution to the problem....:
-```/usr/bin/env echo exploit me```
+2. When Launching ```strings level03``` we find a command that give us the solution to the problem....:   
+`/usr/bin/env echo exploit me`
 
 In this level we have to:
 1. Find a folder where we have rights to create files
