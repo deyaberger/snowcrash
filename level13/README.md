@@ -1,17 +1,6 @@
 # LEVEL 13
 
-## 💡 Explanation
-
-In this level we have to DO SOMETHING VERY FUNNY 🎉🎉
-1. We don't really care for the permissions of the file LOL
-2. We have to understand what the binary is doing and how to exploit it => To do so, we should use a bunch of commands and read some documentation about assembler
-3. Once we've found out that what it is doing is retrieving the UID and comparing it to 4242, we can change the binary to compare it to our UID (`id`) so it'll print the token (eventually)
-4. To do so, we have to first copy the file to /tmp; as before, I've `scp` to my CP to be able to test it easier
-5. Change the permissions to the file; then, open vim, set the mode to be able to see the binary better, find the command that we want to change, change it, go back to binary, save and have fun!
-
-## 👾 Commands
-
-To find the solution:
+- On check ce qu'on a ici avec les commandes suivantes:
 ```
 ./level13
 strings level13
@@ -22,29 +11,115 @@ objdump -d level13
 nm level13
 ```
 
-To modify the file and execute it:
-- `cp level13 /tmp/level13_test`
-- `cd /tmp`
-- `chmod +w level13_test`
-- `vim level13_test`
-- [vim] `:%!xxd`
-- [vim] `/3d`   => Press 'n' until we find "3d 92 10 00 00" == "cmpl	$4242, %eax"
-- [vim] `i`     => Change it for "3d dd 07 00 00" == "cmpl	$2013, %eax"
-- [vim] `:%!xxd -r`
-- [vim] `:wq`
-- `./level13_test`
+Usefull: [peda library](https://github.com/longld/peda)
 
-## 🔍 Resources
+Quand on lance le debugger on a:
+- `objdump -D level13`
 
-- [Linux - how to analyze binary files](https://opensource.com/article/20/4/linux-binary-analysis)
-- [Linux Objdump Command](https://www.thegeekstuff.com/2012/09/objdump-examples/)
-- [UID](https://mtxserv.com/fr/serveur-vps/doc/comment-trouver-l-uid-ou-le-gid-d-un-utilisateur-linux)
-- [Assembly Programming Tutorial](https://www.tutorialspoint.com/assembly_programming/index.htm)
-- [Online Disassembler](https://defuse.ca/online-x86-assembler.htm#disassembly2)
-- [HEX <--> DEC](https://www.rapidtables.com/convert/number/decimal-to-hex.html)
-- [How to edit binary files with Vim? I](https://vi.stackexchange.com/questions/343/how-to-edit-binary-files-with-vim)
-- [How to edit binary files with Vim? II](https://transang.me/edit-binary-file-with-vim-and-the-xxd-command/)
-- [How to search in Vim?](https://linuxize.com/post/vim-search/)
+```
+0804858c <main>:
+ 804858c:	55                   	push   %ebp
+ 804858d:	89 e5                	mov    %esp,%ebp
+ 804858f:	83 e4 f0             	and    $0xfffffff0,%esp
+ 8048592:	83 ec 10             	sub    $0x10,%esp
+ 8048595:	e8 e6 fd ff ff       	call   8048380 <getuid@plt>
+ 804859a:	3d 92 10 00 00       	cmp    $0x1092,%eax       <------ HERE
+ 804859f:	74 2a                	je     80485cb <main+0x3f>
+ 80485a1:	e8 da fd ff ff       	call   8048380 <getuid@plt>
+ 80485a6:	ba c8 86 04 08       	mov    $0x80486c8,%edx
+ 80485ab:	c7 44 24 08 92 10 00 	movl   $0x1092,0x8(%esp)
+ 80485b2:	00
+ 80485b3:	89 44 24 04          	mov    %eax
+```
+On voit qu'il y a des appelels aux [UID d'un fichier](https://linuxhandbook.com/uid-linux/#:~:text=UID%20stands%20for%20user%20identifier,resources%20the%20user%20can%20access.) et qu'il vont comparer un UID precis (variable $0x1092) au retour de la fonction getuid (%eax)
+A cet endroit la on veut faire croire que le retour de getuid est le meme que la variable de comparaison pour pouvoir passer le chekckpoint
 
+- `gdb level13`
+```
+gdb-peda$ b *0x0804859a
+Breakpoint 1 at 0x804859a
+gdb-peda$ r
+Starting program: /tmp/snow/level13
+[----------------------------------registers-----------------------------------]
+EAX: 0x3e8
+EBX: 0x0
+ECX: 0x387a0294
+EDX: 0xffffce74 --> 0x0
+ESI: 0xf7f9b000 --> 0x1d7d8c
+EDI: 0x0
+EBP: 0xffffce48 --> 0x0
+ESP: 0xffffce30 --> 0xf7fe5970 (push   ebp)
+EIP: 0x804859a (<main+14>:      cmp    eax,0x1092)
+EFLAGS: 0x292 (carry parity ADJUST zero SIGN trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+   0x804858f <main+3>:    and    esp,0xfffffff0
+   0x8048592 <main+6>:      sub    esp,0x10
+   0x8048595 <main+9>:   call   0x8048380 <getuid@plt>
+=> 0x804859a <main+14>:  cmp    eax,0x1092
+   0x804859f <main+19>:    je     0x80485cb <main+63>
+   0x80485a1 <main+21>:    call   0x8048380 <getuid@plt>
+   0x80485a6 <main+26>:       mov    edx,0x80486c8
+   0x80485ab <main+31>:       mov    DWORD PTR [esp+0x8],0x1092
+[------------------------------------stack-------------------------------------]
+0000| 0xffffce30 --> 0xf7fe5970 (push   ebp)
+0004| 0xffffce34 --> 0x0
+0008| 0xffffce38 --> 0x80485f9 (<__libc_csu_init+9>:  add    ebx,0x19fb)
+0012| 0xffffce3c --> 0x0
+0016| 0xffffce40 --> 0xf7f9b000 --> 0x1d7d8c
+0020| 0xffffce44 --> 0xf7f9b000 --> 0x1d7d8c
+0024| 0xffffce48 --> 0x0
+0028| 0xffffce4c --> 0xf7ddbfa1 (<__libc_start_main+241>:     add    esp,0x10)
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+
+Breakpoint 1, 0x0804859a in main ()
+gdb-peda$ print $eax=4242
+$1 = 0x1092
+gdb-peda$ s
+
+[----------------------------------registers-----------------------------------]
+EAX: 0x1092
+EBX: 0x0
+ECX: 0x387a0294
+EDX: 0xffffce74 --> 0x0
+ESI: 0xf7f9b000 --> 0x1d7d8c
+EDI: 0x0
+EBP: 0xffffce48 --> 0x0
+ESP: 0xffffce30 --> 0xf7fe5970 (push   ebp)
+EIP: 0x804859f (<main+19>:      je     0x80485cb <main+63>)
+EFLAGS: 0x246 (carry PARITY adjust ZERO sign trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+   0x8048592 <main+6>:    sub    esp,0x10
+   0x8048595 <main+9>:   call   0x8048380 <getuid@plt>
+   0x804859a <main+14>:  cmp    eax,0x1092
+=> 0x804859f <main+19>:  je     0x80485cb <main+63>
+ | 0x80485a1 <main+21>:    call   0x8048380 <getuid@plt>
+ | 0x80485a6 <main+26>:       mov    edx,0x80486c8
+ | 0x80485ab <main+31>:       mov    DWORD PTR [esp+0x8],0x1092
+ | 0x80485b3 <main+39>:       mov    DWORD PTR [esp+0x4],eax
+ |->   0x80485cb <main+63>:        mov    DWORD PTR [esp],0x80486ef
+       0x80485d2 <main+70>:     call   0x8048474 <ft_des>
+       0x80485d7 <main+75>:     mov    edx,0x8048709
+       0x80485dc <main+80>:     mov    DWORD PTR [esp+0x4],eax
+                                                                  JUMP is taken
+[------------------------------------stack-------------------------------------]
+0000| 0xffffce30 --> 0xf7fe5970 (push   ebp)
+0004| 0xffffce34 --> 0x0
+0008| 0xffffce38 --> 0x80485f9 (<__libc_csu_init+9>:  add    ebx,0x19fb)
+0012| 0xffffce3c --> 0x0
+0016| 0xffffce40 --> 0xf7f9b000 --> 0x1d7d8c
+0020| 0xffffce44 --> 0xf7f9b000 --> 0x1d7d8c
+0024| 0xffffce48 --> 0x0
+0028| 0xffffce4c --> 0xf7ddbfa1 (<__libc_start_main+241>:     add    esp,0x10)
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+0x0804859f in main ()
+gdb-peda$ continue
+Continuing.
+your token is 2A31L79asukciNyi8uppkEuSx
+[Inferior 1 (process 23856) exited with code 050]
+Warning: not running
+gdb-peda$
+```
 ## 🔥 Password
 `2A31L79asukciNyi8uppkEuSx`

@@ -4,7 +4,7 @@
 ```
 level07
 ```
-On a un binaire avec des sticky rights qu'on commence a bien connaitre.   
+On a un binaire avec des sticky rights qu'on commence a bien connaitre.
 Maintenant il faut comprendre ce qu'il fait:
 - `strings`
 RAS
@@ -93,7 +93,7 @@ getenv("LOGNAME") = "level07"
 system("/bin/echo level07 ")
 ```
 
-Avec un peu de chance le `level07` de l'appel systeme `bin/echo level07` vient de la variable logname. verifions cela:  
+Avec un peu de chance le `level07` de l'appel systeme `bin/echo level07` vient de la variable logname. verifions cela:
 
 ```bash
 strings ./level07 | grep %s
@@ -110,3 +110,4 @@ Check flag.Here is your token : fiumuikeil55xe9cu4dood66h
 
 Tadaaa !
 
+## 🔥 Password = flag

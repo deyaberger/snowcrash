@@ -1,5 +1,18 @@
 # LEVEL 14
 
+scp -r -o IdentitiesOnly=yes -P 4242 ~/peda level14@192.168.1.50:/var/crash/
+
+```
+gdb /bin/getflag
+#breakpoint at ptrace to break trace detection
+set the return eax to 0 (no error)
+breakpoint at getuid
+set return to 3014 (flag14 uid)
+continue to finish
+flex
+```
+7QiHafiNa3HVozsaXkawuYrTstxbpABHD8CPnHJ
+
 ## 💡 Explanation
 
 In this level we have to DO SOMETHING VERY FUNNY 2.0 🎉🎉
