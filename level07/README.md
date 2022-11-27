@@ -1,12 +1,14 @@
 # LEvel 07
 
-- On commence par regarder ce qu'on a avec `ls -la`
+- On commence par regarder ce qu'on a avec `ls -l`
 ```
-level07
+level07@SnowCrash:~$ ls -l
+total 12
+-rwsr-sr-x 1 flag07 level07 8805 Mar  5  2016 level07
 ```
 On a un binaire avec des sticky rights qu'on commence a bien connaitre.
 Maintenant il faut comprendre ce qu'il fait:
-- `strings`
+- `strings level07`
 RAS
 
 - Du coup tristesse, la seule option qui nous reste : dump le binaire pour essayer de comprendre `objdump -D level07`
@@ -110,4 +112,5 @@ Check flag.Here is your token : fiumuikeil55xe9cu4dood66h
 
 Tadaaa !
 
-## 🔥 Password = flag
+## ⚡ Flag
+`fiumuikeil55xe9cu4dood66h`

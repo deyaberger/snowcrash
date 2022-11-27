@@ -2,6 +2,11 @@
 
 - On check ce qu'on a ici avec les commandes suivantes:
 ```
+level13@SnowCrash:~$ ls -l
+total 8
+-rwsr-sr-x 1 flag13 level13 7303 Aug 30  2015 level13
+```
+```
 ./level13
 strings level13
 ltrace ./level13

