@@ -1,54 +1,57 @@
 # LEVEL 14
 
-scp -r -o IdentitiesOnly=yes -P 4242 ~/peda level14@192.168.1.50:/var/crash/
-
+- Let's beggin with the usual:
 ```
+level14@SnowCrash:~$ ls -l
+total 0
+```
+- Ici ya plus rien, donc on va aller checker direct le binaire `getflag` et appliquer ce qu'on a decouvert dans les exos precedents
+- On va essayer de changer la valeur des variables que va printer getflag
+
+- `objdump -d /bin/getfalg/`
+```
+08048946 <main>:
+ 8048946:	55                   	push   %ebp
+ 8048947:	89 e5                	mov    %esp,%ebp
+ 8048949:	53                   	push   %ebx
+ 804894a:	83 e4 f0             	and    $0xfffffff0,%esp
+                    .......
+ 804897a:	c7 44 24 04 00 00 00 	movl   $0x0,0x4(%esp)
+ 8048981:	00
+ 8048982:	c7 04 24 00 00 00 00 	movl   $0x0,(%esp)
+ 8048989:	e8 b2 fb ff ff       	call   8048540 <ptrace@plt>      <------ Interesting
+ 804898e:	85 c0                	test   %eax,%eax
+ 8048990:	79 16                	jns    80489a8 <main+0x62>
+ 8048992:	c7 04 24 a8 8f 04 08 	movl   $0x8048fa8,(%esp)
+ 8048999:	e8 42 fb ff ff       	call   80484e0 <puts@plt>
+ 804899e:	b8 01 00 00 00       	mov    $0x1,%eax
+                    .......
+ 8048af5:	89 04 24             	mov    %eax,(%esp)
+ 8048af8:	e8 c3 f9 ff ff       	call   80484c0 <fwrite@plt>
+ 8048afd:	e8 ae f9 ff ff       	call   80484b0 <getuid@plt>      <------ Interesting
+ 8048b02:	89 44 24 18          	mov    %eax,0x18(%esp)
+ 8048b06:	8b 44 24 18          	mov    0x18(%esp),%eax
+ 8048b0a:	3d be 0b 00 00       	cmp    $0xbbe,%eax
+```
+
+On va utiliser gdp pour faire les choses suivantes:
+1. breakpoint at ptrace to break trace detection
+2. set the return eax to 0 (no error)
+3. breakpoint at getuid
+4. set return to 3014 (flag14 uid)
+5. continue to finish
+
+On lancera donc les commandes ainsi:
+```gdb
 gdb /bin/getflag
-#breakpoint at ptrace to break trace detection
-set the return eax to 0 (no error)
-breakpoint at getuid
-set return to 3014 (flag14 uid)
-continue to finish
-flex
+b *0x804898e
+r
+print $eax=0
+b *0x8048b02
+c
+print $eax=3014
+c
 ```
-7QiHafiNa3HVozsaXkawuYrTstxbpABHD8CPnHJ
-
-## 💡 Explanation
-
-In this level we have to DO SOMETHING VERY FUNNY 2.0 🎉🎉
-1. In this level there's nothing... So it is time to exploit the binary `getflag`
-2. What we are going to do is to use the program gdb to modify the program during its execution LOL; not really the program but the value of its variables, so we can do whatever we want.
-3. The problem we find here is the function `ptrace` which is used to block the use of gdb => What we should do is to execute it until that exact point, and then modify the value that the function outputs.
-4. Then, we are going to do exactly the same but with the funciton `getuid`, used to verify if we are the right user to give the flag to.
-
-## 👾 Commands
-
-- `cat /etc/passwd` => To check the uid of flag14
-- `cp /bin/getflag /tmp/getflag` => For security reasons :)
-- `cd /tmp`
-- `gdb ./getflag`
-- [gdb] `b ptrace` => Set a breaking point on the function ptrace
-- [gdb] `run` => Executes the program until the function ptrace
-- [gdb] `step 1` => Goes one step further: the exis of the function ptrace
-- [gdb] `info registers`
-- [gdb] `set ($eax) = 0` => We set the return of the function to 0 (success)
-- [gdb] `info registers`
-- [gdb] `b getuid` => We set another breaking point at the fuction getuid
-- [gdb] `continue` => Executes until reach it
-- [gdb] `step 1` => Goes one step further: the exis of the function getuid
-- [gdb] `info registers`
-- [gdb] `set ($eax) = 3014` => We modify the return value of the function to fake that we are flag14
-- [gdb] `info registers`
-- [gdb] `continue`
-
-## 🔍 Resources
-
-- [Linux ptrace command](https://man7.org/linux/man-pages/man2/ptrace.2.html)
-- [Easy bypass for ptrace(PTRACE_TRACEME, 0, 0) in GDB)](https://gist.github.com/poxyran/71a993d292eee10e95b4ff87066ea8f2)
-- [GDB - Step by Step Introduction](https://www.geeksforgeeks.org/gdb-step-by-step-introduction/)
-- [GDB - QuickStart](http://web.eecs.umich.edu/~sugih/pointers/gdbQS.html#:~:text=You%20can%20also%20set%20breakpoints,quit%20gdb%20and%20restart%20it.)
-- [GDB - Continuing and Stepping](http://sourceware.org/gdb/download/onlinedocs/gdb/Continuing-and-Stepping.html)
-- [GDB - How to print register values?](https://stackoverflow.com/questions/5429137/how-to-print-register-values-in-gdb)
 
 ## 🔥 Password
 `7QiHafiNa3HVozsaXkawuYrTstxbpABHD8CPnHJ`

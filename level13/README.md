@@ -6,8 +6,21 @@ level13@SnowCrash:~$ ls -l
 total 8
 -rwsr-sr-x 1 flag13 level13 7303 Aug 30  2015 level13
 ```
+- Quand on lance le programme en question on a :
 ```
-./level13
+level13@SnowCrash:~$ ./level13
+UID 2013 started us but we we expect 4242
+```
+- UID nous rappelle quelque chose, ca a un rapport avec le fichier `/etc/passwd` qui contient les UID de chaque user:
+```
+level13@SnowCrash:~$ cat /etc/passwd | grep -E "level13|flag13|4242"
+level13:x:2013:2013::/home/user/level13:/bin/bash
+flag13:x:3013:3013::/home/flag/flag13:/bin/bash
+```
+`2013` correspond a l'UID de notre user, mais on ne sait pas a quoi correspond `4242`
+
+- On lance plusieurs commande pour voir ce qu'il se passe
+```
 strings level13
 ltrace ./level13
 strace ./level13
@@ -36,10 +49,18 @@ Quand on lance le debugger on a:
  80485b2:	00
  80485b3:	89 44 24 04          	mov    %eax
 ```
-On voit qu'il y a des appelels aux [UID d'un fichier](https://linuxhandbook.com/uid-linux/#:~:text=UID%20stands%20for%20user%20identifier,resources%20the%20user%20can%20access.) et qu'il vont comparer un UID precis (variable $0x1092) au retour de la fonction getuid (%eax)
-A cet endroit la on veut faire croire que le retour de getuid est le meme que la variable de comparaison pour pouvoir passer le chekckpoint
+- On voit qu'il y a des appels aux [UID d'un fichier](https://linuxhandbook.com/uid-linux/#:~:text=UID%20stands%20for%20user%20identifier,resources%20the%20user%20can%20access.) et qu'il vont comparer un UID precis (variable `$0x1092`, qui doit correspondre au fameux `4242`) au retour de la fonction getuid (%eax)
+- A cet endroit la on veut faire croire que le retour de getuid est le meme que la variable de comparaison pour pouvoir passer le chekckpoint
 
-- `gdb level13`
+- `gdb level13` \
+Les commandes a executer dans gdp seront les suivantes:
+```
+b *0x0804859a
+r
+print $eax=4242
+s
+```
+Ca donne ca:
 ```
 gdb-peda$ b *0x0804859a
 Breakpoint 1 at 0x804859a
@@ -126,5 +147,7 @@ your token is 2A31L79asukciNyi8uppkEuSx
 Warning: not running
 gdb-peda$
 ```
-## 🔥 Password
+
+cf: [gdb tutorial](https://www.tutorialspoint.com/gnu_debugger/gdb_commands.htm)
+## ⚡ Flag
 `2A31L79asukciNyi8uppkEuSx`
