@@ -8,7 +8,7 @@ total 12
 ```
 On a un binaire avec des sticky rights qu'on commence a bien connaitre.
 Maintenant il faut comprendre ce qu'il fait:
-- `strings level07`
+- `strings level07`   
 RAS
 
 - Du coup tristesse, la seule option qui nous reste : dump le binaire pour essayer de comprendre `objdump -D level07`
